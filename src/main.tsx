@@ -1,12 +1,12 @@
 import { Devvit, useInterval, useState } from "@devvit/public-api"
-import { Error } from "./components/error.js"
-import { GameOver } from "./components/game-over.js"
-import { GamePlay } from "./components/game-play.js"
 import {
   defaultSubreddits,
   fetchRandomSubreddit,
   getUserFrequentedSubreddits,
-} from "./subreddit-pool.js"
+} from "./api.js"
+import { Error } from "./components/error.js"
+import { GameOver } from "./components/game-over.js"
+import { GamePlay } from "./components/game-play.js"
 import { hydrateSubreddit, ISubreddit } from "./utils.js"
 
 type GameState = {
