@@ -15,10 +15,10 @@ export const defaultSubreddits = Array.from(defaultSubredditsSet)
 /**
  * Derive a list of user's most frequented subreddits from their posts and comments.
  */
-export const getUserFrequentedSubreddits = async (
+export async function getUserFrequentedSubreddits(
   reddit: RedditAPIClient,
   user: User
-): Promise<string[]> => {
+): Promise<string[]> {
   try {
     // Fetch posts and comments in parallel
     const [posts, comments] = await Promise.all([
@@ -62,17 +62,32 @@ export const getUserFrequentedSubreddits = async (
 /**
  * Fetch a random subreddit from the available pool that hasn't been used yet.
  */
-export const fetchRandomSubreddit = async (
+export async function fetchRandomSubreddit(
   reddit: RedditAPIClient,
-  availableSubreddits: string[]
-): Promise<SubredditInfo | null> => {
-  if (availableSubreddits.length === 0) return null
-
+  availableSubreddits: string[],
+  maxAttempts: number = 10
+): Promise<SubredditInfo | null> {
   try {
-    // Get a random subreddit from the list
-    const randomIndex = Math.floor(Math.random() * availableSubreddits.length)
-    const randomSubName = availableSubreddits[randomIndex]
-    return await reddit.getSubredditInfoByName(randomSubName)
+    let attempts = 0
+    while (attempts < maxAttempts && availableSubreddits.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableSubreddits.length)
+      const randomSubName = availableSubreddits[randomIndex]
+
+      try {
+        const subredditInfo = await reddit.getSubredditInfoByName(randomSubName)
+        if (subredditInfo?.subscribersCount !== undefined) {
+          return subredditInfo
+        }
+      } catch (error) {
+        console.error(
+          `Error fetching subreddit info for ${randomSubName}:`,
+          error
+        )
+      }
+      attempts++
+    }
+
+    return null
   } catch (error) {
     console.error("Error in fetchRandomSubreddit:", error)
     return null

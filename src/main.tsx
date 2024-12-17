@@ -184,65 +184,43 @@ Devvit.addCustomPostType({
             topSub: prevState.bottomSub!,
             bottomSub,
           }))
-        } else {
-          console.error("Failed to fetch new subreddit")
         }
       } catch (error) {
         console.error("Error progressing game:", error)
       }
     }
 
-    const updateHighScores = async (score: number) => {
+    // Save high scores to redis such that even if they didn't reset the game,
+    // the scores are still recorded.
+    const updateRedisHighScores = async (score: number) => {
       const { redis, userId } = context
       if (!userId) return
 
-      // Update user's high score if current score is higher
       const userKey = getHighScoreKey(userId)
       const currentHighScore = parseInt((await redis.get(userKey)) || "0")
       if (score > currentHighScore) {
         await redis.set(userKey, score.toString())
-        setHighScore(score)
       }
 
-      // Update global high score if current score is higher
       const globalKey = getGlobalHighScoreKey()
       const currentGlobalHighScore = parseInt(
         (await redis.get(globalKey)) || "0"
       )
       if (score > currentGlobalHighScore) {
         await redis.set(globalKey, score.toString())
-        setGlobalHighScore(score)
       }
     }
 
-    const resetGame = async () => {
-      const availableSubs = getAvailableSubreddits()
-      const [newTopSub, newBottomSub] = await Promise.all([
-        fetchRandomSubreddit(context.reddit, availableSubs),
-        fetchRandomSubreddit(context.reddit, availableSubs),
-      ])
-
-      if (!newTopSub || !newBottomSub) {
-        console.error("Failed to fetch initial subreddits")
-        return
+    // We delay updating the local high scores until the game is reset
+    // to properly render "new high score" message.
+    const updateLocalHighScores = (score: number) => {
+      if (score > highScore) {
+        setHighScore(score)
       }
 
-      const topSub = hydrateSubreddit(newTopSub)
-      const bottomSub = hydrateSubreddit(newBottomSub)
-
-      // Reset used subreddits and add new ones
-      setUsedSubreddits([topSub.name, bottomSub.name])
-
-      // Update high scores from previous game before resetting
-      await updateHighScores(gameState.score)
-
-      setGameState({
-        score: 0,
-        gameOver: false,
-        showResults: false,
-        topSub,
-        bottomSub,
-      })
+      if (score > globalHighScore) {
+        setGlobalHighScore(score)
+      }
     }
 
     const handleGuess = async (guessedHigher: boolean) => {
@@ -262,7 +240,37 @@ Devvit.addCustomPostType({
       if (isCorrect) {
         setShouldProgress(true)
         progressInterval.start()
+      } else {
+        await updateRedisHighScores(gameState.score)
       }
+    }
+
+    const resetGame = async () => {
+      const availableSubs = getAvailableSubreddits()
+      const [newTopSub, newBottomSub] = await Promise.all([
+        fetchRandomSubreddit(context.reddit, availableSubs),
+        fetchRandomSubreddit(context.reddit, availableSubs),
+      ])
+
+      if (!newTopSub || !newBottomSub) {
+        console.error("Failed to fetch initial subreddits")
+        return
+      }
+
+      const topSub = hydrateSubreddit(newTopSub)
+      const bottomSub = hydrateSubreddit(newBottomSub)
+
+      setUsedSubreddits([topSub.name, bottomSub.name])
+
+      updateLocalHighScores(gameState.score)
+
+      setGameState({
+        score: 0,
+        gameOver: false,
+        showResults: false,
+        topSub,
+        bottomSub,
+      })
     }
 
     if (!gameState.topSub || !gameState.bottomSub) {
