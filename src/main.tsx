@@ -12,7 +12,7 @@ import {
 import { Error } from "./components/error.js"
 import { GameOver } from "./components/game-over.js"
 import { GamePlay } from "./components/game-play.js"
-import { hydrateSubreddit, ISubreddit } from "./utils.js"
+import { ISubreddit, toSubreddit } from "./utils.js"
 
 type GameState = {
   score: number
@@ -146,8 +146,8 @@ Devvit.addCustomPostType({
             score: 0,
             showResults: false,
             gameOver: false,
-            topSub: hydrateSubreddit(topSub),
-            bottomSub: hydrateSubreddit(bottomSub),
+            topSub: toSubreddit(topSub),
+            bottomSub: toSubreddit(bottomSub),
           })
         }
         return null
@@ -173,7 +173,7 @@ Devvit.addCustomPostType({
         const newBottomSub = await fetchRandomSubreddit(reddit, availableSubs)
 
         if (newBottomSub) {
-          const bottomSub = hydrateSubreddit(newBottomSub)
+          const bottomSub = toSubreddit(newBottomSub)
 
           // Add new subreddit to used set
           setUsedSubreddits((prev) => [...prev, bottomSub.name])
@@ -257,8 +257,8 @@ Devvit.addCustomPostType({
         return
       }
 
-      const topSub = hydrateSubreddit(newTopSub)
-      const bottomSub = hydrateSubreddit(newBottomSub)
+      const topSub = toSubreddit(newTopSub)
+      const bottomSub = toSubreddit(newBottomSub)
 
       setUsedSubreddits([topSub.name, bottomSub.name])
 

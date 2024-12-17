@@ -5,7 +5,8 @@ export type ISubreddit = {
   subscribers: number
 }
 
-export const hydrateSubreddit = (subreddit: SubredditInfo): ISubreddit => {
+// Convert SubredditInfo to ISubreddit
+export const toSubreddit = (subreddit: SubredditInfo): ISubreddit => {
   return {
     name: subreddit.name ?? "",
     subscribers: subreddit.subscribersCount ?? 0,
