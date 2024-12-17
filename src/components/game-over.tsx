@@ -11,6 +11,7 @@ interface GameOverProps {
   globalHighScore: number
 }
 
+// Render game over screen.
 export const GameOver = ({
   score,
   topSub,

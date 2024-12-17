@@ -5,9 +5,10 @@ interface TypewriterTextProps {
   delay?: number
 }
 
+// Text component with nimated typewriter effect.
 export const TypewriterText: Devvit.BlockComponent<TypewriterTextProps> = ({
   text,
-  delay = 144,
+  delay = 111,
 }) => {
   const [counter, setCounter] = useState(1)
   const [prevText, setPrevText] = useState(text)

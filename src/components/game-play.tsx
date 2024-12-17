@@ -12,6 +12,7 @@ interface GamePlayProps {
   onLower: () => void
 }
 
+// Render game play screen.
 export const GamePlay = ({
   score,
   topSub,

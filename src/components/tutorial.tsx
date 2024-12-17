@@ -1,5 +1,6 @@
 import { Devvit } from "@devvit/public-api"
 
+// Render tutorial text on first score.
 export const Tutorial = () => (
   <vstack gap="small" alignment="middle center">
     <text size="large" color="#B8C5C9">
