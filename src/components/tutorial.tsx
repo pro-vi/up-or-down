@@ -3,7 +3,7 @@ import { Devvit } from "@devvit/public-api"
 export const Tutorial = () => (
   <vstack gap="small" alignment="middle center">
     <text size="large" color="#B8C5C9">
-      Does the bottom subreddit have
+      Does the subreddit below have
     </text>
     <hstack gap="small" alignment="middle center">
       <text size="large" color="#B8C5C9">

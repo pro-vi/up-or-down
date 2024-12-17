@@ -7,6 +7,8 @@ interface GameOverProps {
   topSub: ISubreddit | null
   bottomSub: ISubreddit | null
   onPlayAgain: () => void
+  highScore: number
+  globalHighScore: number
 }
 
 export const GameOver = ({
@@ -14,6 +16,8 @@ export const GameOver = ({
   topSub,
   bottomSub,
   onPlayAgain,
+  highScore,
+  globalHighScore,
 }: GameOverProps) => (
   <vstack
     height="100%"
@@ -32,10 +36,34 @@ export const GameOver = ({
         {topSub && <SubredditCard subreddit={topSub} showSubscribers />}
       </hstack>
 
-      <hstack width="69%" height="100%" grow alignment="middle center">
-        <button onPress={onPlayAgain} size="large" width="100%">
-          Retry
-        </button>
+      <hstack width="100%" height="100%" grow alignment="middle center">
+        <vstack gap="small" grow alignment="middle center">
+          <hstack gap="small">
+            <text size="large" color="#B8C5C9">
+              Your Best: {Math.max(score, highScore)}
+            </text>
+            {score > highScore && (
+              <text size="medium" color="#FF4500" weight="bold">
+                New Best!
+              </text>
+            )}
+          </hstack>
+
+          <hstack gap="small">
+            <text size="large" color="#B8C5C9">
+              Global Best: {Math.max(score, globalHighScore)}
+            </text>
+            {score > globalHighScore && (
+              <text size="medium" color="#FF4500" weight="bold">
+                New Record!
+              </text>
+            )}
+          </hstack>
+
+          <button onPress={onPlayAgain} size="large" width="50%">
+            Retry
+          </button>
+        </vstack>
       </hstack>
 
       <hstack gap="medium" alignment="middle start" width="100%">

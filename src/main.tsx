@@ -19,7 +19,11 @@ type GameState = {
 
 Devvit.configure({
   redditAPI: true,
+  redis: true,
 })
+
+const getHighScoreKey = (userId: string) => `high_score:${userId}`
+const getGlobalHighScoreKey = () => `high_score:global`
 
 Devvit.addMenuItem({
   label: "Create Subreddit Higher/Lower Game",
@@ -48,6 +52,8 @@ Devvit.addCustomPostType({
   height: "tall",
   render: (context) => {
     const [usedSubreddits, setUsedSubreddits] = useState<string[]>([])
+    const [highScore, setHighScore] = useState(0)
+    const [globalHighScore, setGlobalHighScore] = useState(0)
 
     // Keep track of game state
     const [gameState, setGameState] = useState<GameState>({
@@ -56,6 +62,25 @@ Devvit.addCustomPostType({
       showResults: false,
       topSub: null,
       bottomSub: null,
+    })
+
+    // Fetch high scores on mount
+    useState(async () => {
+      const { redis, userId } = context
+      if (!userId) return null
+
+      // Get user's high score
+      const userHighScore = await redis.get(getHighScoreKey(userId))
+      if (userHighScore) {
+        setHighScore(parseInt(userHighScore))
+      }
+
+      // Get global high score
+      const globalScore = await redis.get(getGlobalHighScoreKey())
+      if (globalScore) {
+        setGlobalHighScore(parseInt(globalScore))
+      }
+      return null
     })
 
     // Fetch user's frequented subreddits on mount
@@ -148,6 +173,29 @@ Devvit.addCustomPostType({
       }
     }
 
+    const updateHighScores = async (score: number) => {
+      const { redis, userId } = context
+      if (!userId) return
+
+      // Update user's high score if current score is higher
+      const userKey = getHighScoreKey(userId)
+      const currentHighScore = parseInt((await redis.get(userKey)) || "0")
+      if (score > currentHighScore) {
+        await redis.set(userKey, score.toString())
+        setHighScore(score)
+      }
+
+      // Update global high score if current score is higher
+      const globalKey = getGlobalHighScoreKey()
+      const currentGlobalHighScore = parseInt(
+        (await redis.get(globalKey)) || "0"
+      )
+      if (score > currentGlobalHighScore) {
+        await redis.set(globalKey, score.toString())
+        setGlobalHighScore(score)
+      }
+    }
+
     const resetGame = async () => {
       console.log('method: "resetGame"')
       const availableSubs = getAvailableSubreddits()
@@ -166,6 +214,9 @@ Devvit.addCustomPostType({
 
       // Reset used subreddits and add new ones
       setUsedSubreddits([topSub.name, bottomSub.name])
+
+      // Update high scores from previous game before resetting
+      await updateHighScores(gameState.score)
 
       setGameState({
         score: 0,
@@ -207,6 +258,8 @@ Devvit.addCustomPostType({
           topSub={gameState.topSub}
           bottomSub={gameState.bottomSub}
           onPlayAgain={resetGame}
+          highScore={highScore}
+          globalHighScore={globalHighScore}
         />
       )
     }
