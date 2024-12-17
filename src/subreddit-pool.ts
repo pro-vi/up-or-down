@@ -1,4 +1,5 @@
 import { RedditAPIClient, SubredditInfo, User } from "@devvit/public-api"
+import subredditsData from "./data/subreddits.json"
 
 const POST_WEIGHT = 2
 const POST_COUNT = 20
@@ -6,78 +7,7 @@ const COMMENT_WEIGHT = 1
 const COMMENT_COUNT = 200
 const MAX_USER_SUBREDDITS = 10
 
-const defaultSubredditsSet = new Set([
-  // Sports
-  "soccer",
-  "soccercirclejerk",
-  "nba",
-  "nbacirclejerk",
-  "formula1",
-
-  // Music
-  "bass",
-  "guitar",
-  "drums",
-  "vinyl",
-  "synthesizers",
-
-  // Photography
-  "photography",
-  "analog",
-
-  // Gaming
-  "gaming",
-  "gamingcirclejerk",
-  "pcmasterrace",
-  "consolemasterrace",
-
-  // Tech and Programming
-  "rust",
-  "golang",
-  "typescript",
-  "MachineLearning",
-  "devops",
-  "gamedev",
-  "iOSProgramming",
-  "androiddev",
-  "webgl",
-  "reactjs",
-
-  // Gaming Communities
-  "Minecraft",
-  "LeagueOfLegends",
-  "DotA2",
-  "wow",
-  "Steam",
-  "pcmasterrace",
-  "PS5",
-  "NintendoSwitch",
-  "XboxSeriesX",
-
-  // Science and Learning
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "Astronomy",
-  "Geology",
-  "Mathematics",
-  "compsci",
-  "linguistics",
-  "Psychology",
-  "Economics",
-
-  // Creative Arts
-  "DigitalArt",
-  "Illustration",
-  "Sculpture",
-  "Animation",
-  "PixelArt",
-  "Embroidery",
-  "Crochet",
-  "Quilting",
-  "origami",
-  "Ceramics",
-])
+const defaultSubredditsSet = new Set(subredditsData.defaultSubreddits)
 
 // Keep array for ordered access
 export const defaultSubreddits = Array.from(defaultSubredditsSet)
