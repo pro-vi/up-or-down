@@ -9,12 +9,17 @@ interface GameOverProps {
   onPlayAgain: () => void
 }
 
-export const GameOver = ({ score, topSub, bottomSub, onPlayAgain }: GameOverProps) => (
+export const GameOver = ({
+  score,
+  topSub,
+  bottomSub,
+  onPlayAgain,
+}: GameOverProps) => (
   <vstack
     height="100%"
     width="100%"
     gap="large"
-    padding="medium"
+    padding="large"
     backgroundColor="#1A1A1B"
     alignment="top center"
   >
@@ -22,24 +27,19 @@ export const GameOver = ({ score, topSub, bottomSub, onPlayAgain }: GameOverProp
       Game Over! Final Score: {score}
     </text>
 
-    <vstack gap="large" alignment="middle center" width="100%">
+    <vstack alignment="middle center" width="100%" grow>
       <hstack gap="medium" alignment="middle start" width="100%">
         {topSub && <SubredditCard subreddit={topSub} showSubscribers />}
       </hstack>
 
-      <hstack width="80%" alignment="middle center">
+      <hstack width="69%" height="100%" grow alignment="middle center">
         <button onPress={onPlayAgain} size="large" width="100%">
-          Play Again
+          Retry
         </button>
       </hstack>
 
       <hstack gap="medium" alignment="middle start" width="100%">
-        {bottomSub && (
-          <SubredditCard
-            subreddit={bottomSub}
-            showSubscribers={true}
-          />
-        )}
+        {bottomSub && <SubredditCard subreddit={bottomSub} showSubscribers />}
       </hstack>
     </vstack>
   </vstack>

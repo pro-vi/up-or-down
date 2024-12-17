@@ -40,16 +40,14 @@ export const SubredditCard: Devvit.BlockComponent<SubredditCardProps> = ({
           </text>
         )}
       </hstack>
-      {showSubscribers && (
-        <hstack gap="small" alignment="bottom">
-          <text size="xlarge" color="#FF4500" weight="bold">
-            {subreddit.subscribers.toLocaleString()}
-          </text>
-          <text size="medium" color="#7C7C7C">
-            members
-          </text>
-        </hstack>
-      )}
+      <hstack gap="small" alignment="bottom">
+        <text size="xlarge" color="#FF4500" weight="bold">
+          {showSubscribers ? subreddit.subscribers.toLocaleString() : "???"}
+        </text>
+        <text size="medium" color="#7C7C7C">
+          members
+        </text>
+      </hstack>
     </vstack>
   )
 }

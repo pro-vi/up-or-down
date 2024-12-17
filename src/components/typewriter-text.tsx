@@ -7,7 +7,7 @@ interface TypewriterTextProps {
 
 export const TypewriterText: Devvit.BlockComponent<TypewriterTextProps> = ({
   text,
-  delay = 100,
+  delay = 144,
 }) => {
   const [counter, setCounter] = useState(1)
   const [prevText, setPrevText] = useState(text)
