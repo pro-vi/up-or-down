@@ -1,5 +1,7 @@
 import { Devvit, useInterval, useState } from "@devvit/public-api"
-import { SubredditCard } from "./components/subreddit-card.js"
+import { Error } from "./components/error.js"
+import { GameOver } from "./components/game-over.js"
+import { GamePlay } from "./components/game-play.js"
 import {
   defaultSubreddits,
   fetchRandomSubreddit,
@@ -45,16 +47,18 @@ Devvit.addCustomPostType({
   name: "Subreddit Comparison Game",
   height: "tall",
   render: (context) => {
+    const [usedSubreddits, setUsedSubreddits] = useState<string[]>([])
+
     // Keep track of game state
     const [gameState, setGameState] = useState<GameState>({
       score: 0,
-      showResults: false,
       gameOver: false,
+      showResults: false,
       topSub: null,
       bottomSub: null,
     })
 
-    // Fetch user's frequented subreddits once
+    // Fetch user's frequented subreddits on mount
     const [userSubreddits] = useState<string[]>(async () => {
       console.log("useState: Fetching user subreddits")
       const { reddit, userId } = context
@@ -66,24 +70,33 @@ Devvit.addCustomPostType({
 
     // Get available subreddits
     const getAvailableSubreddits = () => {
-      if (!userSubreddits?.length) {
-        return defaultSubreddits
+      // Start with default subreddits
+      const availableSubs = [...defaultSubreddits]
+
+      // Add user's subreddits if available
+      if (userSubreddits) {
+        availableSubs.push(...userSubreddits)
       }
-      return [...new Set([...defaultSubreddits, ...userSubreddits])]
+
+      console.log("usedSubreddits", usedSubreddits)
+
+      // Filter out used subreddits
+      return availableSubs.filter((sub) => !usedSubreddits.includes(sub))
     }
 
     // Initialize game with first subreddits
-    useState<GameState | null>(async () => {
-      console.log("useState: Initializing game state")
+    useState(async () => {
+      console.log("useState: Initializing game")
       try {
-        const { reddit } = context
         const availableSubs = getAvailableSubreddits()
         const [topSub, bottomSub] = await Promise.all([
-          fetchRandomSubreddit(reddit, availableSubs),
-          fetchRandomSubreddit(reddit, availableSubs),
+          fetchRandomSubreddit(context.reddit, availableSubs),
+          fetchRandomSubreddit(context.reddit, availableSubs),
         ])
 
         if (topSub?.name && bottomSub?.name) {
+          setUsedSubreddits((prev) => [...prev, topSub.name!, bottomSub.name!])
+
           setGameState({
             score: 0,
             showResults: false,
@@ -116,20 +129,51 @@ Devvit.addCustomPostType({
         const newBottomSub = await fetchRandomSubreddit(reddit, availableSubs)
 
         if (newBottomSub) {
+          const bottomSub = hydrateSubreddit(newBottomSub)
+
+          // Add new subreddit to used set
+          setUsedSubreddits((prev) => [...prev, bottomSub.name])
+
           setGameState((prevState) => ({
             ...prevState,
             showResults: false,
             topSub: prevState.bottomSub!,
-            bottomSub: hydrateSubreddit(newBottomSub),
+            bottomSub,
           }))
-
-          console.log("I just fcking set the game state")
         } else {
           console.error("Failed to fetch new subreddit")
         }
       } catch (error) {
         console.error("Error progressing game:", error)
       }
+    }
+
+    const resetGame = async () => {
+      console.log('method: "resetGame"')
+      const availableSubs = getAvailableSubreddits()
+      const [newTopSub, newBottomSub] = await Promise.all([
+        fetchRandomSubreddit(context.reddit, availableSubs),
+        fetchRandomSubreddit(context.reddit, availableSubs),
+      ])
+
+      if (!newTopSub || !newBottomSub) {
+        console.error("Failed to fetch initial subreddits")
+        return
+      }
+
+      const topSub = hydrateSubreddit(newTopSub)
+      const bottomSub = hydrateSubreddit(newBottomSub)
+
+      // Reset used subreddits and add new ones
+      setUsedSubreddits([topSub.name, bottomSub.name])
+
+      setGameState({
+        score: 0,
+        gameOver: false,
+        showResults: false,
+        topSub,
+        bottomSub,
+      })
     }
 
     const handleGuess = async (guessedHigher: boolean) => {
@@ -152,123 +196,30 @@ Devvit.addCustomPostType({
       }
     }
 
-    const resetGame = async () => {
-      console.log('method: "resetGame"')
-      const availableSubs = getAvailableSubreddits()
-      const [newTopSub, newBottomSub] = await Promise.all([
-        fetchRandomSubreddit(context.reddit, availableSubs),
-        fetchRandomSubreddit(context.reddit, availableSubs),
-      ])
-      if (newTopSub && newBottomSub) {
-        setGameState({
-          score: 0,
-          showResults: false,
-          gameOver: false,
-          topSub: hydrateSubreddit(newTopSub),
-          bottomSub: hydrateSubreddit(newBottomSub),
-        })
-      }
-    }
-
     if (!gameState.topSub || !gameState.bottomSub) {
-      return (
-        <vstack height="100%" width="100%" alignment="middle center">
-          <text size="large" color="red">
-            Error loading subreddits. Please try again!
-          </text>
-        </vstack>
-      )
+      return <Error message="Error loading subreddits. Please try again!" />
     }
 
     if (gameState.gameOver) {
-      console.log("rendering game over")
-
       return (
-        <vstack
-          height="100%"
-          width="100%"
-          gap="large"
-          padding="medium"
-          backgroundColor="#1A1A1B"
-          alignment="top center"
-        >
-          <text size="xlarge" alignment="center" color="white" weight="bold">
-            Game Over! Final Score: {gameState.score}
-          </text>
-
-          <vstack gap="large" alignment="middle center" width="100%">
-            <hstack gap="medium" alignment="middle start" width="100%">
-              <SubredditCard subreddit={gameState.topSub} showSubscribers />
-            </hstack>
-
-            <hstack width="80%" alignment="middle center">
-              <button onPress={resetGame} size="large" width="100%">
-                Play Again
-              </button>
-            </hstack>
-
-            <hstack gap="medium" alignment="middle start" width="100%">
-              <SubredditCard
-                subreddit={gameState.bottomSub}
-                showSubscribers={true}
-              />
-            </hstack>
-          </vstack>
-        </vstack>
+        <GameOver
+          score={gameState.score}
+          topSub={gameState.topSub}
+          bottomSub={gameState.bottomSub}
+          onPlayAgain={resetGame}
+        />
       )
     }
 
     return (
-      <vstack
-        height="100%"
-        width="100%"
-        gap="large"
-        padding="medium"
-        backgroundColor="#1A1A1B"
-        alignment="top center"
-      >
-        <text size="xlarge" alignment="center" color="white" weight="bold">
-          Score: {gameState.score}
-        </text>
-
-        <vstack gap="large" alignment="middle center" width="100%">
-          <hstack gap="medium" alignment="middle start" width="100%">
-            <SubredditCard subreddit={gameState.topSub} showSubscribers />
-          </hstack>
-
-          <hstack width="80%" alignment="middle center">
-            <text size="xxlarge" color="white" weight="bold">
-              VS
-            </text>
-          </hstack>
-
-          <hstack gap="small" alignment="middle start" width="100%">
-            {!gameState.showResults && (
-              <vstack gap="medium" alignment="middle center">
-                <icon
-                  name="up-arrow-fill"
-                  size="large"
-                  onPress={() => handleGuess(false)}
-                  lightColor="#FF4500"
-                  darkColor="#FF4500"
-                />
-                <icon
-                  name="down-arrow-fill"
-                  size="large"
-                  onPress={() => handleGuess(true)}
-                  lightColor="#7193FF"
-                  darkColor="#7193FF"
-                />
-              </vstack>
-            )}
-            <SubredditCard
-              subreddit={gameState.bottomSub}
-              showSubscribers={gameState.showResults}
-              animate
-            />
-          </hstack>
-        </vstack>
-      </vstack>
+      <GamePlay
+        score={gameState.score}
+        topSub={gameState.topSub}
+        bottomSub={gameState.bottomSub}
+        showResults={gameState.showResults}
+        onHigher={() => handleGuess(true)}
+        onLower={() => handleGuess(false)}
+      />
     )
   },
 })
