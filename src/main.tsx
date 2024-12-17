@@ -90,7 +90,6 @@ Devvit.addCustomPostType({
 
     // Fetch user's frequented subreddits on mount
     const [userSubreddits] = useState<string[]>(async () => {
-      console.log("useState: Fetching user subreddits")
       const { reddit, userId } = context
       if (!userId) return []
       const user = await reddit.getUserById(userId)
@@ -108,15 +107,12 @@ Devvit.addCustomPostType({
         availableSubs.push(...userSubreddits)
       }
 
-      console.log("usedSubreddits", usedSubreddits)
-
       // Filter out used subreddits
       return availableSubs.filter((sub) => !usedSubreddits.includes(sub))
     }
 
     // Initialize game with first subreddits
     useState(async () => {
-      console.log("useState: Initializing game")
       try {
         const availableSubs = getAvailableSubreddits()
 
@@ -171,7 +167,6 @@ Devvit.addCustomPostType({
     }, 2000)
 
     const handleProgress = async () => {
-      console.log('method: "handleProgress"')
       try {
         const { reddit } = context
         const availableSubs = getAvailableSubreddits()
@@ -221,7 +216,6 @@ Devvit.addCustomPostType({
     }
 
     const resetGame = async () => {
-      console.log('method: "resetGame"')
       const availableSubs = getAvailableSubreddits()
       const [newTopSub, newBottomSub] = await Promise.all([
         fetchRandomSubreddit(context.reddit, availableSubs),
