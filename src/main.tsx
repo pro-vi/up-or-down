@@ -1,4 +1,9 @@
-import { Devvit, useInterval, useState } from "@devvit/public-api"
+import {
+  Devvit,
+  SubredditInfo,
+  useInterval,
+  useState,
+} from "@devvit/public-api"
 import {
   defaultSubreddits,
   fetchRandomSubreddit,
@@ -114,10 +119,29 @@ Devvit.addCustomPostType({
       console.log("useState: Initializing game")
       try {
         const availableSubs = getAvailableSubreddits()
-        const [topSub, bottomSub] = await Promise.all([
-          fetchRandomSubreddit(context.reddit, availableSubs),
-          fetchRandomSubreddit(context.reddit, availableSubs),
-        ])
+
+        // Try to get a user subreddit first for topSub
+        let topSub: SubredditInfo | null = null
+        if (userSubreddits && userSubreddits.length > 0) {
+          // Get a random user subreddit
+          const randomUserSub =
+            userSubreddits[Math.floor(Math.random() * userSubreddits.length)]
+          topSub = await fetchRandomSubreddit(context.reddit, [randomUserSub])
+        }
+
+        // If no user subreddit was found, get a random one from available subs
+        if (!topSub) {
+          topSub = await fetchRandomSubreddit(context.reddit, availableSubs)
+        }
+
+        // Get bottom subreddit from remaining available subs, excluding the top one
+        const remainingSubs = availableSubs.filter(
+          (sub) => sub !== topSub?.name
+        )
+        const bottomSub = await fetchRandomSubreddit(
+          context.reddit,
+          remainingSubs
+        )
 
         if (topSub?.name && bottomSub?.name) {
           setUsedSubreddits((prev) => [...prev, topSub.name!, bottomSub.name!])
