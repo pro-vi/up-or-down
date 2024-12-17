@@ -31,16 +31,16 @@ const getHighScoreKey = (userId: string) => `high_score:${userId}`
 const getGlobalHighScoreKey = () => `high_score:global`
 
 Devvit.addMenuItem({
-  label: "Create Subreddit Higher/Lower Game",
+  label: "Create Up or Down Game",
   location: "subreddit",
   forUserType: "moderator",
   onPress: async (_event, context) => {
     const { reddit, ui } = context
-    ui.showToast("Creating your Subreddit Higher/Lower game...")
+    ui.showToast("Creating your Up or Down game...")
 
     const subreddit = await reddit.getCurrentSubreddit()
     const post = await reddit.submitPost({
-      title: "Guess Which Subreddit Has More Members!",
+      title: "The Up or Down Game!",
       subredditName: subreddit.name,
       preview: (
         <vstack height="100%" width="100%" alignment="middle center">
@@ -53,7 +53,7 @@ Devvit.addMenuItem({
 })
 
 Devvit.addCustomPostType({
-  name: "Subreddit Comparison Game",
+  name: "Up or Down Game",
   height: "tall",
   render: (context) => {
     const [usedSubreddits, setUsedSubreddits] = useState<string[]>([])
